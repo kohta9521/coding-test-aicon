@@ -20,6 +20,10 @@ type ItemRepository interface {
 	// Delete deletes an item by ID
 	Delete(ctx context.Context, id int64) error
 
+	// Update updates specified fields of an item by ID
+	// FindByID, Create, Delete, Updateなどどんな操作が可能かを宣言する
+	Update(ctx context.Context, id int64, name *string, brand *string, purchasePrice *int) error
+
 	// GetSummaryByCategory returns item counts grouped by category (bonus feature)
 	GetSummaryByCategory(ctx context.Context) (map[string]int, error)
 }

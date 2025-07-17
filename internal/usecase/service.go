@@ -13,6 +13,7 @@ type ItemUsecase interface {
 	GetItemByID(ctx context.Context, id int64) (*entity.Item, error)
 	CreateItem(ctx context.Context, input CreateItemInput) (*entity.Item, error)
 	DeleteItem(ctx context.Context, id int64) error
+	UpdateItem(ctx context.Context, id int64, input UpdateItemInput) error
 	GetCategorySummary(ctx context.Context) (*CategorySummary, error)
 }
 
@@ -22,6 +23,13 @@ type CreateItemInput struct {
 	Brand         string `json:"brand"`
 	PurchasePrice int    `json:"purchase_price"`
 	PurchaseDate  string `json:"purchase_date"`
+}
+
+// 構造体定義
+type UpdateItemInput struct {
+	Name          *string `json:"name,omitempty"`
+	Brand         *string `json:"brand,omitempty"`
+	PurchasePrice *int    `json:"purchase_price,omitempty"`
 }
 
 type CategorySummary struct {
@@ -104,6 +112,37 @@ func (u *itemUsecase) DeleteItem(ctx context.Context, id int64) error {
 	}
 
 	return nil
+}
+
+
+func (u *itemUsecase) UpdateItem(ctx context.Context, id int64, input UpdateItemInput) error {
+	// IDがただ詩歌の確認
+	if id <= 0 {
+		return domainErrors.ErrInvalidInput
+	}
+	// 不変フィールドは無視
+	if input.Name == nil && input.Brand == nil && input.PurchasePrice == nil {
+		return domainErrors.ErrInvalidInput
+	}
+	// バリデーション
+	if input.Name != nil && (*input.Name == "" || len(*input.Name) > 100) {
+		return domainErrors.ErrInvalidInput
+	}
+	if input.Brand != nil && (*input.Brand == "" || len(*input.Brand) > 100) {
+		return domainErrors.ErrInvalidInput
+	}
+	if input.PurchasePrice != nil && *input.PurchasePrice < 0 {
+		return domainErrors.ErrInvalidInput
+	}
+	// 存在確認
+	_, err := u.itemRepo.FindByID(ctx, id)
+	if err != nil {
+		if domainErrors.IsNotFoundError(err) {
+			return domainErrors.ErrItemNotFound
+		}
+		return err
+	}
+	return u.itemRepo.Update(ctx, id, input.Name, input.Brand, input.PurchasePrice)
 }
 
 func (u *itemUsecase) GetCategorySummary(ctx context.Context) (*CategorySummary, error) {

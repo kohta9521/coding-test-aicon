@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	"Aicon-assignment/internal/domain/entity"
@@ -92,6 +93,54 @@ func (r *ItemRepository) Delete(ctx context.Context, id int64) error {
 	query := `DELETE FROM items WHERE id = ?`
 
 	result, err := r.Execute(ctx, query, id)
+	if err != nil {
+		return fmt.Errorf("%w: %s", domainErrors.ErrDatabaseError, err.Error())
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("%w: failed to get rows affected: %s", domainErrors.ErrDatabaseError, err.Error())
+	}
+
+	if rowsAffected == 0 {
+		return domainErrors.ErrItemNotFound
+	}
+
+	return nil
+}
+
+func (r *ItemRepository) Update(ctx context.Context, id int64, name *string, brand *string, purchasePrice *int) error {
+	// 更新対象フィールドを動的に組み立て
+	setClauses := []string{}
+	args := []interface{}{}
+
+	if name != nil {
+		setClauses = append(setClauses, "name = ?")
+		args = append(args, *name)
+	}
+	if brand != nil {
+		setClauses = append(setClauses, "brand = ?")
+		args = append(args, *brand)
+	}
+	if purchasePrice != nil {
+		setClauses = append(setClauses, "purchase_price = ?")
+		args = append(args, *purchasePrice)
+	}
+
+	if len(setClauses) == 0 {
+		return domainErrors.ErrInvalidInput // 更新対象がない
+	}
+
+	setClauses = append(setClauses, "updated_at = ?")
+	args = append(args, time.Now())
+
+	args = append(args, id)
+
+	query := "UPDATE items SET " +
+		strings.Join(setClauses, ", ") +
+		" WHERE id = ?"
+
+	result, err := r.Execute(ctx, query, args...)
 	if err != nil {
 		return fmt.Errorf("%w: %s", domainErrors.ErrDatabaseError, err.Error())
 	}
