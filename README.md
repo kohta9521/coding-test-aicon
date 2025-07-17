@@ -1,28 +1,31 @@
-# 所持品管理API
+# 所持品管理 API
 
-高級品やコレクションアイテムを管理するREST APIサーバーです。
+高級品やコレクションアイテムを管理する REST API サーバーです。
 
-## 📋 API仕様
+## 📋 API 仕様
 
-### ベースURL
+### ベース URL
+
 ```
 http://localhost:8080
 ```
 
 ### エンドポイント一覧
 
-| メソッド | パス | 説明 | ステータスコード |
-|---------|------|------|-----------------|
-| GET | `/health` | ヘルスチェック | 200 |
-| GET | `/items` | 全アイテム取得 | 200 |
-| POST | `/items` | アイテム登録 | 201, 400 |
-| GET | `/items/{id}` | 特定アイテム取得 | 200, 404 |
-| DELETE | `/items/{id}` | アイテム削除 | 204, 404 |
-| GET | `/items/summary` | カテゴリー別集計 | 200 |
+| メソッド | パス             | 説明             | ステータスコード |
+| -------- | ---------------- | ---------------- | ---------------- |
+| GET      | `/health`        | ヘルスチェック   | 200              |
+| GET      | `/items`         | 全アイテム取得   | 200              |
+| POST     | `/items`         | アイテム登録     | 201, 400         |
+| GET      | `/items/{id}`    | 特定アイテム取得 | 200, 404         |
+| DELETE   | `/items/{id}`    | アイテム削除     | 204, 404         |
+| GET      | `/items/summary` | カテゴリー別集計 | 200              |
+| PATCH    | `/items/{id}`    | アイテム部分更新 | 204, 400, 404    |
 
 ### データ形式
 
 #### アイテム (Item)
+
 ```json
 {
   "id": 1,
@@ -37,6 +40,7 @@ http://localhost:8080
 ```
 
 #### 有効なカテゴリー
+
 - `時計`
 - `バッグ`
 - `ジュエリー`
@@ -45,22 +49,24 @@ http://localhost:8080
 
 ### バリデーションルール
 
-| フィールド | 必須 | 制限 |
-|-----------|------|------|
-| name | ✓ | 100文字以内 |
-| category | ✓ | 有効なカテゴリーのみ |
-| brand | ✓ | 100文字以内 |
-| purchase_price | ✓ | 0以上の整数 |
-| purchase_date | ✓ | YYYY-MM-DD形式 |
+| フィールド     | 必須 | 制限                       |
+| -------------- | ---- | -------------------------- |
+| name           | -    | 100 文字以内（空文字不可） |
+| category       | ✓    | 有効なカテゴリーのみ       |
+| brand          | -    | 100 文字以内（空文字不可） |
+| purchase_price | -    | 0 以上の整数               |
+| purchase_date  | ✓    | YYYY-MM-DD 形式            |
 
-### API使用例
+### API 使用例
 
 #### 1. 全アイテム取得
+
 ```bash
 curl -X GET http://localhost:8080/items
 ```
 
 **レスポンス:**
+
 ```json
 [
   {
@@ -77,6 +83,7 @@ curl -X GET http://localhost:8080/items
 ```
 
 #### 2. アイテム登録
+
 ```bash
 curl -X POST http://localhost:8080/items \
   -H "Content-Type: application/json" \
@@ -90,21 +97,25 @@ curl -X POST http://localhost:8080/items \
 ```
 
 #### 3. 特定アイテム取得
+
 ```bash
 curl -X GET http://localhost:8080/items/1
 ```
 
 #### 4. アイテム削除
+
 ```bash
 curl -X DELETE http://localhost:8080/items/1
 ```
 
 #### 5. カテゴリー別集計
+
 ```bash
 curl -X GET http://localhost:8080/items/summary
 ```
 
 **レスポンス:**
+
 ```json
 {
   "categories": {
@@ -118,15 +129,33 @@ curl -X GET http://localhost:8080/items/summary
 }
 ```
 
+#### 6. アイテム部分更新
+
+```bash
+curl -X PATCH http://localhost:8080/items/1 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "新しい名前",
+    "brand": "新ブランド",
+    "purchase_price": 123456
+  }'
+```
+
+- 指定したフィールド（name, brand, purchase_price）のみ部分的に更新されます。
+- いずれか 1 つだけでも OK です。
+- 不変フィールド（id, created_at, updated_at, category, purchase_date）は更新不可・無視されます。
+
+**レスポンス:**
+
+- 成功時: ステータスコード 204 No Content（レスポンスボディなし）
+- バリデーションエラーや存在しない ID の場合はエラーレスポンス
+
 ### エラーレスポンス形式
 
 ```json
 {
   "error": "validation failed",
-  "details": [
-    "name is required",
-    "purchase_price must be 0 or greater"
-  ]
+  "details": ["name is required", "purchase_price must be 0 or greater"]
 }
 ```
 
@@ -166,10 +195,12 @@ curl -X GET http://localhost:8080/items/summary
 ## 🔧 開発環境
 
 ### 前提条件
+
 - Docker
 - Docker Compose
 
 ### ローカル開発
+
 ```bash
 # 依存関係をインストール
 go mod download
