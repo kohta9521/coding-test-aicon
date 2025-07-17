@@ -159,6 +159,13 @@ curl -X PATCH http://localhost:8080/items/1 \
 }
 ```
 
+### Postman コレクション
+
+API の全エンドポイントをまとめた Postman コレクションを公開しています。
+下記リンクからインポートしてご利用ください。
+
+[Postman Workspace: My-Workspace (全 API コレクション)](https://web.postman.co/workspace/My-Workspace~875e7b15-738e-4bef-8892-fcf2dc060798/collection/45469828-873133c2-8370-4d14-a058-b20d2be618a1?action=share&source=copy-link&creator=45469828)
+
 ## 🛠️ 技術スタック
 
 - **言語**: Go 1.23
